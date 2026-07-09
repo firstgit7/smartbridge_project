@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank Dashboard - FinAI Credit</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/css/style.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="/"><i class="bi bi-bank me-2"></i>FinAI Credit</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/">Overview</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/prediction">Apply Now</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/dashboard">Bank Dashboard</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0 text-dark">Analytics Dashboard</h2>
+            <button class="btn btn-outline-primary btn-sm"><i class="bi bi-download me-2"></i>Export Report</button>
+        </div>
+        
+        <!-- Summary Cards -->
+        <div class="row g-4 mb-5">
+            <div class="col-md-3">
+                <div class="glass-panel p-4 h-100">
+                    <div class="d-flex justify-content-between">
+                        <h6 class="text-muted mb-3 text-uppercase">Total Processed</h6>
+                        <i class="bi bi-activity text-primary fs-5"></i>
+                    </div>
+                    <h2 class="fw-bold m-0 text-dark">{{ stats.total }}</h2>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="glass-panel p-4 h-100">
+                    <div class="d-flex justify-content-between">
+                        <h6 class="text-muted mb-3 text-uppercase">Approval Rate</h6>
+                        <i class="bi bi-check-circle text-success fs-5"></i>
+                    </div>
+                    <h2 class="fw-bold m-0 text-success">{{ stats.approval_rate }}%</h2>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="glass-panel p-4 h-100">
+                    <div class="d-flex justify-content-between">
+                        <h6 class="text-muted mb-3 text-uppercase">Rejection Rate</h6>
+                        <i class="bi bi-x-circle text-danger fs-5"></i>
+                    </div>
+                    <h2 class="fw-bold m-0 text-danger">{{ stats.rejected_rate }}%</h2>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="glass-panel p-4 h-100 border-top border-4 border-warning">
+                    <div class="d-flex justify-content-between">
+                        <h6 class="text-muted mb-3 text-uppercase">Flagged High Risk</h6>
+                        <i class="bi bi-exclamation-triangle text-warning fs-5"></i>
+                    </div>
+                    <h2 class="fw-bold m-0 text-dark">{{ stats.risk_distribution['High'] }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="row g-4 mb-5">
+            <div class="col-md-6">
+                <div class="glass-panel p-4 h-100">
+                    <h6 class="mb-4 text-dark fw-bold">Approval vs Rejection</h6>
+                    <div style="height: 300px; display: flex; justify-content: center;">
+                        <canvas id="approvalChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="glass-panel p-4 h-100">
+                    <h6 class="mb-4 text-dark fw-bold">Risk Distribution Profile</h6>
+                    <div style="height: 300px; display: flex; justify-content: center;">
+                        <canvas id="riskChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Table -->
+        <div class="glass-panel p-4 mb-5">
+            <h6 class="mb-4 text-dark fw-bold">Recent Application Logs</h6>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light text-muted">
+                        <tr>
+                            <th>Applicant ID</th>
+                            <th>Decision</th>
+                            <th>AI Confidence</th>
+                            <th>Risk Band</th>
+                            <th>Reported Income</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in stats.recent %}
+                        <tr>
+                            <td class="text-muted">#{{ loop.index + 1000 }}</td>
+                            <td>
+                                <span class="badge rounded-pill {% if row[0] == 'Approved' %}bg-success-subtle text-success{% else %}bg-danger-subtle text-danger{% endif %} border">
+                                    {{ row[0] }}
+                                </span>
+                            </td>
+                            <td class="fw-medium">{{ row[1] }}%</td>
+                            <td>
+                                <span class="badge {% if row[2] == 'High' %}bg-warning text-dark{% elif row[2] == 'Medium' %}bg-secondary{% else %}bg-success{% endif %}">
+                                    {{ row[2] }}
+                                </span>
+                            </td>
+                            <td class="text-muted">${{ "{:,.0f}".format(row[3]) }}</td>
+                        </tr>
+                        {% endfor %}
+                        {% if not stats.recent %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">No applications processed yet.</td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const appRate = parseFloat('{{ stats.approval_rate }}');
+        const rejRate = parseFloat('{{ stats.rejected_rate }}');
+        const riskHigh = parseInt('{{ stats.risk_distribution["High"] }}');
+        const riskMed = parseInt('{{ stats.risk_distribution["Medium"] }}');
+        const riskLow = parseInt('{{ stats.risk_distribution["Low"] }}');
+
+        // Approval Chart
+        new Chart(document.getElementById('approvalChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Approved', 'Rejected'],
+                datasets: [{
+                    data: [appRate, rejRate],
+                    backgroundColor: ['#20c997', '#ff6b6b'],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom', labels: { color: '#1a1f36', padding: 20 } } },
+                cutout: '70%'
+            }
+        });
+
+        // Risk Chart
+        new Chart(document.getElementById('riskChart'), {
+            type: 'bar',
+            data: {
+                labels: ['High Risk', 'Medium Risk', 'Low Risk'],
+                datasets: [{
+                    label: 'Number of Applications',
+                    data: [riskHigh, riskMed, riskLow],
+                    backgroundColor: ['#ffc107', '#aeb4c0', '#20c997'],
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#e3e8ee' }, ticks: { color: '#697386' } },
+                    x: { grid: { display: false }, ticks: { color: '#697386' } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+    </script>
+</body>
+</html>
