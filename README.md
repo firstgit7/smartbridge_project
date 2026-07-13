@@ -1,21 +1,17 @@
-**AI-ML-and-GEN-AI-Track-Project-Template**
+# 💳 Credit Card Approval Prediction
 
-**Repository Structure**
+A machine learning project that predicts whether a credit card application will be approved or rejected using machine learning techniques.
 
-1.Brainstorming & Ideation
+## 🎥 Project Demo
 
-2.Requirement Analysis
+<a href="https://youtu.be/BoEa9oK7zUw" target="_blank">
+  <img src="https://img.youtube.com/vi/BoEa9oK7zUw/maxresdefault.jpg" alt="Watch the project demo" width="700">
+</a>
 
-3.Project Design Phase
+## 🛠️ Technologies
 
-4.Project Planning Phase
-
-5.Project Development Phase
-
-6.Project Testing
-
-7.Project Documentation
-
-8.Project Demonstration
-
-Replace the placeholder files with your team's project deliverables.
+* Python
+* Pandas
+* NumPy
+* Scikit-learn
+* Jupyter Notebook
